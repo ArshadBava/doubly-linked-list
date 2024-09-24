@@ -2,149 +2,169 @@
 using namespace std;
 
 struct Node {
-    int data; 
-    Node* next; 
-    Node* prev; 
+    int data;
+    Node* next;
+    Node* prev;
 
     Node(int data) : data(data), next(NULL), prev(NULL) {}
 };
 
-void forwardTraversal(Node* head) {
-    Node* curr = head;
-    while (curr != NULL) {
-        cout << curr->data << " ";
-        curr = curr->next;
-    }
-    cout << endl;
-}
+class DoublyLinkedList {
+private:
+    Node* head;
+    Node* tail;
 
-void backwardTraversal(Node* tail) {
-    Node* curr = tail;
-    while (curr != NULL) {
-        cout << curr->data << " ";
-        curr = curr->prev;
-    }
-    cout << endl;
-}
+public:
+    DoublyLinkedList() : head(NULL), tail(NULL) {}
 
-int findLength(Node* head) {
-    int count = 0;
-    for (Node* cur = head; cur != NULL; cur = cur->next)
-        count++;
-    return count;
-}
-
-Node* insertBegin(Node* head, int data) {
-    Node* new_node = new Node(data);
-    new_node->next = head;
-    if (head != NULL)
-        head->prev = new_node;
-    return new_node;
-}
-
-Node* insertEnd(Node* head, Node*& tail, int new_data) {
-    Node* new_node = new Node(new_data);
-    if (head == NULL) {
-        tail = new_node;  // Update tail if the list is empty
-        return new_node;
-    } else {
-        Node* curr = head;
-        while (curr->next != NULL) {
-            curr = curr->next;
-        }
-        curr->next = new_node;
-        new_node->prev = curr;
-        tail = new_node;  // Update tail to the new node
-    }
-    return head;
-}
-
-Node* insertAtPosition(Node* head, Node*& tail, int pos, int new_data) {
-    Node* new_node = new Node(new_data);
-    if (pos == 1) {
+    void insertBegin(int data) {
+        Node* new_node = new Node(data);
         new_node->next = head;
         if (head != NULL)
             head->prev = new_node;
-        return new_node;
+        head = new_node;
+        if (tail == NULL) // If list was empty
+            tail = head;
     }
-    Node* curr = head;
-    for (int i = 1; i < pos - 1 && curr != NULL; ++i) {
-        curr = curr->next;
-    }
-    if (curr == NULL) {
-        delete new_node;
-        cout << "Position is out of bounds." << endl;
-        return head;
-    }
-    new_node->prev = curr;
-    new_node->next = curr->next;
-    curr->next = new_node;
-    if (new_node->next != NULL)
-        new_node->next->prev = new_node;
-    if (new_node->next == NULL) // Update tail if new node is the last node
+
+    void insertEnd(int data) {
+        Node* new_node = new Node(data);
+        if (head == NULL) {
+            head = new_node;
+            tail = new_node;
+            return;
+        }
+        tail->next = new_node;
+        new_node->prev = tail;
         tail = new_node;
-    return head;
-}
-
-Node* delHead(Node* head) {
-    if (head == NULL)
-        return NULL;
-    Node* temp = head;
-    head = head->next;
-    if (head != NULL)
-        head->prev = NULL;
-    delete temp;
-    return head;
-}
-
-Node* delLast(Node* head, Node*& tail) {
-    if (head == NULL)
-        return NULL;
-    if (head->next == NULL) {
-        delete head;
-        tail = NULL; // Update tail to NULL when the list is empty
-        return NULL;
     }
-    Node* curr = tail;
-    curr->prev->next = NULL;
-    tail = curr->prev; // Update tail to the previous node
-    delete curr; 
-    return head;
-}
 
-Node* delPos(Node* head, Node*& tail, int pos) {
-    if (!head)
-        return head;
-    Node* curr = head;
-    for (int i = 1; curr && i < pos; ++i) {
-        curr = curr->next;
+    void insertAtPosition(int pos, int data) {
+        if (pos < 1) {
+            cout << "Position must be 1 or greater." << endl;
+            return;
+        }
+        Node* new_node = new Node(data);
+        if (pos == 1) {
+            insertBegin(data);
+            return;
+        }
+        Node* curr = head;
+        for (int i = 1; curr != NULL && i < pos - 1; i++) {
+            curr = curr->next;
+        }
+        if (curr == NULL) {
+            cout << "Position is out of bounds." << endl;
+            delete new_node;
+            return;
+        }
+        new_node->next = curr->next;
+        new_node->prev = curr;
+        if (curr->next != NULL)
+            curr->next->prev = new_node;
+        curr->next = new_node;
+        if (new_node->next == NULL) // If inserted at the end, update tail
+            tail = new_node;
     }
-    if (!curr)
-        return head;
-    if (curr->prev)
-        curr->prev->next = curr->next;
-    if (curr->next)
-        curr->next->prev = curr->prev;
-    if (head == curr)
-        head = curr->next;
-    if (tail == curr) // Update tail if we're deleting the last node
-        tail = curr->prev;
-    delete curr;
-    return head;
-}
 
-void printList(Node* head) {
-    Node* curr = head;
-    while (curr != NULL) {
-        cout << curr->data << " ";
-        curr = curr->next;
+    void delHead() {
+        if (head == NULL) {
+            cout << "List is empty." << endl;
+            return;
+        }
+        Node* temp = head;
+        head = head->next;
+        if (head != NULL)
+            head->prev = NULL;
+        else
+            tail = NULL; // If list is empty after deletion
+        delete temp;
     }
-    cout << endl;
-}
+
+    void delLast() {
+        if (tail == NULL) {
+            cout << "List is empty." << endl;
+            return;
+        }
+        Node* temp = tail;
+        tail = tail->prev;
+        if (tail != NULL)
+            tail->next = NULL;
+        else
+            head = NULL; // If list is empty after deletion
+        delete temp;
+    }
+
+    void delPos(int pos) {
+        if (head == NULL || pos < 1) {
+            cout << "List is empty or invalid position." << endl;
+            return;
+        }
+        Node* curr = head;
+        for (int i = 1; curr != NULL && i < pos; i++) {
+            curr = curr->next;
+        }
+        if (curr == NULL) {
+            cout << "Position is out of bounds." << endl;
+            return;
+        }
+        if (curr->prev != NULL)
+            curr->prev->next = curr->next;
+        if (curr->next != NULL)
+            curr->next->prev = curr->prev;
+        if (curr == head) // Deleting head
+            head = curr->next;
+        if (curr == tail) // Deleting tail
+            tail = curr->prev;
+        delete curr;
+    }
+
+    void forwardTraversal() {
+        Node* curr = head;
+        while (curr != NULL) {
+            cout << curr->data << " ";
+            curr = curr->next;
+        }
+        cout << endl;
+    }
+
+    void backwardTraversal() {
+        Node* curr = tail;
+        while (curr != NULL) {
+            cout << curr->data << " ";
+            curr = curr->prev;
+        }
+        cout << endl;
+    }
+
+    int findLength() {
+        int count = 0;
+        Node* curr = head;
+        while (curr != NULL) {
+            count++;
+            curr = curr->next;
+        }
+        return count;
+    }
+
+    void printList() {
+        Node* curr = head;
+        while (curr != NULL) {
+            cout << curr->data << " ";
+            curr = curr->next;
+        }
+        cout << endl;
+    }
+
+    ~DoublyLinkedList() {
+        while (head != NULL) {
+            delHead();
+        }
+    }
+};
 
 int main() {
-    Node* head = NULL;
-    Node* tail = NULL; // Pointer for the tail
+    DoublyLinkedList list;
     int choice, data, pos;
 
     while (true) {
@@ -166,45 +186,43 @@ int main() {
             case 1:
                 cout << "Enter data: ";
                 cin >> data;
-                head = insertBegin(head, data);
-                if (tail == NULL) tail = head; // Update tail if the list was empty
+                list.insertBegin(data);
                 break;
             case 2:
                 cout << "Enter data: ";
                 cin >> data;
-                head = insertEnd(head, tail, data);
+                list.insertEnd(data);
                 break;
             case 3:
                 cout << "Enter position and data: ";
                 cin >> pos >> data;
-                head = insertAtPosition(head, tail, pos, data);
+                list.insertAtPosition(pos, data);
                 break;
             case 4:
-                head = delHead(head);
-                if (head == NULL) tail = NULL; // Update tail if the list is empty
+                list.delHead();
                 break;
             case 5:
-                head = delLast(head, tail);
+                list.delLast();
                 break;
             case 6:
                 cout << "Enter position: ";
                 cin >> pos;
-                head = delPos(head, tail, pos);
+                list.delPos(pos);
                 break;
             case 7:
                 cout << "Forward Traversal: ";
-                forwardTraversal(head);
+                list.forwardTraversal();
                 break;
             case 8:
                 cout << "Backward Traversal: ";
-                backwardTraversal(tail); // Use tail for backward traversal
+                list.backwardTraversal();
                 break;
             case 9:
-                cout << "Length: " << findLength(head) << endl;
+                cout << "Length: " << list.findLength() << endl;
                 break;
             case 10:
                 cout << "List: ";
-                printList(head);
+                list.printList();
                 break;
             case 11:
                 return 0;
@@ -213,4 +231,3 @@ int main() {
         }
     }
 }
-
